@@ -119,7 +119,7 @@ def get_data(pid):
 
 def fill_xlsx(new_file, pid_row, column=PIDS_COL):
     """
-
+    Put date into xlsx file
     :param new_file:
     :param pid_row:
     :param column:
@@ -141,7 +141,7 @@ def fill_xlsx(new_file, pid_row, column=PIDS_COL):
     wb.close()
 
 
-def create_file_with_data(template_name, since_date, to_date):
+def create_file_with_data(template_name, since_date, to_date, pid_rows):
     """
     Create xlsx file. And then fill in the file
     :param template_name: Name of template
@@ -155,7 +155,7 @@ def create_file_with_data(template_name, since_date, to_date):
     template_file = f'./template/{template_name}.xlsx'
 
     copy_template_file(template_file, new_file)
-    pid_rows = get_pids(template_file)
+    # pid_rows = get_pids(template_file)
     fill_xlsx(new_file, pid_rows)
 
 
