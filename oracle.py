@@ -21,7 +21,25 @@ def ora_connect():
     return connection
 
 
-def get_data():
+def ora_get_data(cursor):
+    cursor.execute(SQL_REQUEST)
+
+    res = cursor.fetchall()
+    return res
 
 def ora_close(connection):
     connection.close()
+
+
+def main():
+    try:
+        conn = ora_connect()
+        cursor = conn.cursor()
+        data = ora_get_data(cursor)
+        print(data)
+    except ora.DatabaseError as e:
+        code, mesg = e.args[0].message[:-1].split(': ', 1)
+        print(f'code = {code}')
+        print(f'value = ', mesg)
+    finally:
+        ora_close(conn)
