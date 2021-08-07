@@ -1,6 +1,7 @@
 import openpyxl as xl
 import shutil
 import logging
+import oracle
 from datetime import datetime
 
 
@@ -104,9 +105,9 @@ def get_pids(template_file, pid_colunm=PIDS_COL):
 
     pids = dict()
     for num_row in range(1, mr + 1):
-        cell = ws.cell(row=num_row, column=pid_colunm).value
-        if cell:
-            pids[num_row] = cell
+        pid = ws.cell(row=num_row, column=pid_colunm).value
+        if pid:
+            pids[pid] = num_row
 
     wb.close()
 
@@ -117,7 +118,7 @@ def get_data(pid):
     return data.get(pid)
 
 
-def fill_xlsx(new_file, pid_row, column=PIDS_COL):
+def fill_xlsx(new_file, pid_row, date_since, date_to, column=PIDS_COL):
     """
     Put date into xlsx file
     :param new_file:
@@ -127,7 +128,9 @@ def fill_xlsx(new_file, pid_row, column=PIDS_COL):
     """
     wb, ws = open_xlsx(new_file)
 
-    for num_row, pid in pid_row.items():
+    conn = oracle.ora_connect()
+    ora__prev_data = oracle.ora_get_raw_data(conn, date_since, )
+    for pid in pid_row.items():
         xls_data = get_data(pid)
 
         ws.cell(row=num_row, column=row_config['name']).value = xls_data['name']
@@ -141,7 +144,7 @@ def fill_xlsx(new_file, pid_row, column=PIDS_COL):
     wb.close()
 
 
-def create_file_with_data(template_name, since_date, to_date, pid_rows):
+def create_file_with_data(template_name, since_date, to_date):
     """
     Create xlsx file. And then fill in the file
     :param template_name: Name of template
@@ -155,8 +158,5 @@ def create_file_with_data(template_name, since_date, to_date, pid_rows):
     template_file = f'./template/{template_name}.xlsx'
 
     copy_template_file(template_file, new_file)
-    # pid_rows = get_pids(template_file)
-    fill_xlsx(new_file, pid_rows)
-
-
-
+    pid_rows = get_pids(template_file)
+    fill_xlsx(new_file, pid_rows, since_date, to_date)

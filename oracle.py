@@ -4,13 +4,10 @@ import keyring
 SQL_REQUEST = """
 SELECT   p.mid, b.date_time, b.erm "a+", b.edm "a-"
 FROM   billorg b, points p
-WHERE   p.mid = b.mid 
-        AND (b.date_time> TO_DATE('{}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{}', 'DD.MM.YYYY'))
-        AND b.mid IN (SELECT mid
-                      FROM   points
-                      START WITH mid = 59666
-                      CONNECT BY PRIOR mid = parent)
-ORDER BY p.name;
+WHERE   p.mid = b.mid
+        AND (b.date_time> TO_DATE('{0}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{0}', 'DD.MM.YYYY'))
+        AND b.mid IN {1}
+ORDER BY p.name
 """
 
 
@@ -21,11 +18,20 @@ def ora_connect():
     return connection
 
 
-def ora_get_data(cursor):
-    cursor.execute(SQL_REQUEST)
+def ora_get_raw_data(cursor, date, pids):
+    date = f"{date.days:02}.{date.month:02}.{date.years:04}"
+    pids = ", ".join([str(pid) for pid in pids.keys()])
+
+    cursor.execute(SQL_REQUEST.format(date, pids))
 
     res = cursor.fetchall()
     return res
+
+
+def ora_get_data(cursor):
+    raw_data = ora_get_raw_data(cursor)
+    return type(raw_data)
+
 
 def ora_close(connection):
     connection.close()
@@ -43,3 +49,7 @@ def main():
         print(f'value = ', mesg)
     finally:
         ora_close(conn)
+
+
+if __name__ == '__main__':
+    main()
