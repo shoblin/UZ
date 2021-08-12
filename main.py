@@ -2,6 +2,7 @@ import fa
 
 
 def main():
+    template = fa.get_template_name()
     template = 'template_KOE'
 
     date_since = fa.ask_date('Введите дату предыущего отчетного периода')

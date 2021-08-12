@@ -6,7 +6,7 @@ import UZ.fa as fa
 from datetime import datetime,date
 
 
-class Test_fa(unittest.TestCase):
+class Test_Fa(unittest.TestCase):
     def test_correct_fa_get_date(self):
         answer1, answer2 = fa.get_date('01-01-2021')
         correct_answer = datetime(2021, 1, 1, 0, 0)

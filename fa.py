@@ -49,6 +49,10 @@ def ask_date(txt):
 
 
 # Function for create xlsx file
+def get_template_name():
+    return None
+
+
 def copy_template_file(template_file, new_file):
     """
     Copy file <template_file> to <new_file>
@@ -126,22 +130,18 @@ def fill_xlsx(new_file, pid_row, date_since, date_to, column=PIDS_COL):
     :param column:
     :return:
     """
-    wb, ws = open_xlsx(new_file)
+    # wb, ws = open_xlsx(new_file)
 
     conn = oracle.ora_connect()
-    ora__prev_data = oracle.ora_get_raw_data(conn, date_since, )
-    for pid in pid_row.items():
-        xls_data = get_data(pid)
+    ora_prev_data = oracle.ora_get_raw_data(conn, date_since, pid_row)
+    ora_current_data = oracle.ora_get_raw_data(conn, date_to, pid_row)
 
-        ws.cell(row=num_row, column=row_config['name']).value = xls_data['name']
-        ws.cell(row=num_row, column=row_config['surname']).value = xls_data['surname']
-        ws.cell(row=num_row, column=row_config['points']).value = xls_data['points']
 
-    for x in range(1, ws.max_row + 1):
-        ws.cell(row=x, column=column).value = None
+    # for x in range(1, ws.max_row + 1):
+    #    ws.cell(row=x, column=column).value = None
 
-    wb.save(new_file)
-    wb.close()
+    # wb.save(new_file)
+    # wb.close()
 
 
 def create_file_with_data(template_name, since_date, to_date):
