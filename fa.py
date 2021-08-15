@@ -5,24 +5,29 @@ import oracle
 from datetime import datetime
 
 
-PIDS_COL = 1
-data = {
-    1: {'name': 'Ivan', 'surname': 'Ivanov', 'points': 450},
-    2: {'name': 'Petro', 'surname': 'Petrov', 'points': 550},
-    3: {'name': 'Semen', 'surname': 'Uruk', 'points': 1050},
-    4: {'name': 'Valera', 'surname': 'Neo', 'points': 452}
-}
-row_config = {'name': 2, 'surname': 3, 'points': 4}
-
-
-# Function for get date
+# Функции для получения дат начала и конца периода
 class FutureDate(Exception):
+    """
+    Обработчик исключения. Дата конца и начала периода,
+    должны быть раньше сегодня
+    """
+
     def __init__(self, text):
         self.txt = text
 
 
-def get_date(str_date):
-
+def get_date(str_date: str):
+    """
+    Переводим str_date в дату, попутно проверяем ее:
+        - Что бы дата была раньше сегодня
+        - Что бы была в правильном формате
+        - Что бы существовала
+    Args:
+        str_date (str): дата в виде строки, должна быть в формате "ДД-ММ-ГГГГ"
+    Returns:
+        True или False - в зависимости от того, смогли ли мы преобразовать дату
+        date - преобразованую строку в datetime
+    """
     try:
         date = datetime.strptime(str_date, '%d-%m-%Y')
         if date > datetime.now():
@@ -38,6 +43,16 @@ def get_date(str_date):
 
 
 def ask_date(txt):
+    """
+    Запрашиваем у пользователя дату
+
+    Args:
+        txt (str): Текст выдаваемый запросом
+             Правильность ввденой даты проверяется фунцией
+             get_date(str_date)
+    Returns:
+        date (datetime): Преобразованая дата
+    """
     true_date = False
     date = None
     while not true_date:
@@ -55,23 +70,29 @@ def get_template_name():
 
 def copy_template_file(template_file, new_file):
     """
-    Copy file <template_file> to <new_file>
-    :param template_file: Source file - file with template
-    :param new_file: Destination file - new file with date from DB
-    :return: NONE
+    Копируем шаблон <template_file> в новый файл <new_file>
+    Args:
+        template_file (str): Имя одно из файлов шаблона, которые находятся в папке Templates
+        new_file (str): Имя нового файла сформированого из шаблона
+
+    Returns:
+        None - Копирует template_file с новым названием new_file
     """
     try:
         shutil.copy(template_file, new_file)
+        return True
     except shutil.SameFileError:
-        logging.error('Source and destination represents the same file.')
-
-        # If there is any permission issue
+        # Исключение на будущее, когда можно будет задавать имя нового файла через аргументы
+        print('Имя Шаблона и нового файла совпадают')
     except PermissionError:
-        logging.error("Permission denied.")
+        # Исключение при недоступноти
+        print("У вас нет прав.")
 
         # For other errors
     except:
-        logging.error("Error occurred while copying file.")
+        print("Error occurred while copying file.")
+    finally:
+        return False
 
 
 def new_file_name(template, to_date):
@@ -136,7 +157,6 @@ def fill_xlsx(new_file, pid_row, date_since, date_to, column=PIDS_COL):
     ora_prev_data = oracle.ora_get_raw_data(conn, date_since, pid_row)
     ora_current_data = oracle.ora_get_raw_data(conn, date_to, pid_row)
 
-
     # for x in range(1, ws.max_row + 1):
     #    ws.cell(row=x, column=column).value = None
 
@@ -153,7 +173,6 @@ def create_file_with_data(template_name, since_date, to_date):
 
     :return: True if
     """
-    logging.basicConfig(filename='uz.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
     new_file = new_file_name(template_name, to_date)
     template_file = f'./template/{template_name}.xlsx'
 
