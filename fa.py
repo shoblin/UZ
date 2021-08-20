@@ -1,6 +1,5 @@
 import openpyxl as xl
 import shutil
-import logging
 import oracle
 from datetime import datetime
 
@@ -88,7 +87,7 @@ def copy_template_file(template_file, new_file):
         # Исключение при недоступноти
         print("У вас нет прав.")
 
-        # For other errors
+    # For other errors
     except:
         print("Error occurred while copying file.")
     finally:
