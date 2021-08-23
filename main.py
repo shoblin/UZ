@@ -7,13 +7,17 @@ def main():
     template_name = 'template_KOE'
 
     # Даты начала и конца периода отчета
-    date_since = fa.ask_date('Введите дату предыущего отчетного периода')
-    date_to = fa.ask_date('Введите дату этого отчетного периода')
+    first_date = fa.request_date('Введите дату предыущего отчетного периода')
+    second_date = fa.request_date('Введите дату этого отчетного периода')
+    date_since, date_to = fa.order_dates(first_date, second_date)
 
     new_file_name = fa.new_file_name(template_name, date_to)
     template_name = f'./template/{template_name}.xlsx'
 
-    fa.copy_template_file(template_name, new_file_name)
+    success_copy = False
+    if not fa.copy_template_file(template_name, new_file_name):
+        print('Файл не создан')
+        return 0
 
     fa.create_file_with_data(template_name, date_since, date_to)
 

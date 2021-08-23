@@ -15,7 +15,7 @@ class FutureDate(Exception):
         self.txt = text
 
 
-def get_date(str_date: str):
+def check_validation_date(str_date: str):
     """
     Переводим str_date в дату, попутно проверяем ее:
         - Что бы дата была раньше сегодня
@@ -41,13 +41,12 @@ def get_date(str_date: str):
     return False, None
 
 
-def ask_date(txt):
+def request_date(txt):
     """
-    Запрашиваем у пользователя дату
-
+    Запрашиваем у пользователя дату в формате ДД-ММ-ГГГГ
     Args:
         txt (str): Текст выдаваемый запросом
-             Правильность ввденой даты проверяется фунцией
+             Правильность введеной даты проверяется фунцией
              get_date(str_date)
     Returns:
         date (datetime): Преобразованая дата
@@ -57,9 +56,24 @@ def ask_date(txt):
     while not true_date:
         print(txt)
         str_date = input('В формате ДД-ММ-ГГГГ: ')
-        true_date, date = get_date(str_date)
+        true_date, date = check_validation_date(str_date)
 
     return date
+
+
+def order_dates(first_date, second_date):
+    """
+
+    Args:
+        first_date:
+        second_date:
+
+    Returns:
+
+    """
+    if first_date == second_date:
+        print('Даты должны быть разными')
+    return sorted([first_date, second_date])
 
 
 # Function for create xlsx file
@@ -114,7 +128,7 @@ def open_xlsx(file_name):
     return wb, ws
 
 
-def get_pids(template_file, pid_colunm=PIDS_COL):
+def get_pids(template_file, pid_colunm=1):
     """
     Get points id from excel column
     :param template_file: Source file - file with template
@@ -142,7 +156,7 @@ def get_data(pid):
     return data.get(pid)
 
 
-def fill_xlsx(new_file, pid_row, date_since, date_to, column=PIDS_COL):
+def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
     """
     Put date into xlsx file
     :param new_file:
