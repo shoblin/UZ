@@ -2,11 +2,11 @@ import cx_Oracle as ora
 import keyring
 
 SQL_REQUEST = """
-SELECT   p.mid, b.date_time, b.erm "a+", b.edm "a-"
-FROM   billorg b, points p
-WHERE   p.mid = b.mid
-        AND (b.date_time> TO_DATE('{0}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{0}', 'DD.MM.YYYY'))
-        AND b.mid IN {1}
+SELECT      p.mid, b.date_time, b.erm "a+", b.edm "a-"
+FROM        billorg b, points p
+WHERE       p.mid = b.mid
+            AND (b.date_time> TO_DATE('{0}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{0}', 'DD.MM.YYYY'))
+            AND b.mid IN {1}
 ORDER BY p.name
 """
 
