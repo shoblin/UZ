@@ -6,7 +6,7 @@ SELECT      p.mid, b.date_time, b.erm "a+", b.edm "a-"
 FROM        billorg b, points p
 WHERE       p.mid = b.mid
             AND (b.date_time> TO_DATE('{0}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{0}', 'DD.MM.YYYY'))
-            AND b.mid IN {1}
+            AND b.mid IN ({1})
 ORDER BY p.name
 """
 
@@ -19,10 +19,10 @@ def ora_connect():
 
 
 def ora_get_raw_data(cursor, date, pids):
-    date = f"{date.days:02}.{date.month:02}.{date.years:04}"
-    pids = ", ".join([str(pid) for pid in pids.keys()])
-
-    cursor.execute(SQL_REQUEST.format(date, pids))
+    date = f"{date.day:02}.{date.month:02}.{date.year:04}"
+    pids = ", ".join([str(abs(pid)) for pid in pids.keys()])
+    sql_request = SQL_REQUEST.format(date, pids)
+    cursor.execute(sql_request)
 
     res = cursor.fetchall()
     return res

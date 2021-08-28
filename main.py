@@ -6,7 +6,7 @@ import oracle as ora
 def main():
     # Задача на будущее: прикрутить argparser
     first_date, second_date = None, None
-    template_name = 'template_KOE'
+    template_name = 'template_BOE'
 
     # Даты начала и конца периода отчета вводим с клавиатуры
     while fa.check_difference(first_date, second_date):
