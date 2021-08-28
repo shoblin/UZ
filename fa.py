@@ -1,6 +1,7 @@
+import sys
+
 import openpyxl as xl
 import shutil
-import logging
 import oracle
 from datetime import datetime
 
@@ -16,7 +17,7 @@ class FutureDate(Exception):
         self.txt = text
 
 
-def get_date(str_date: str):
+def check_validation_date(str_date: str):
     """
     Переводим str_date в дату, попутно проверяем ее:
         - Что бы дата была раньше сегодня
@@ -42,13 +43,12 @@ def get_date(str_date: str):
     return False, None
 
 
-def ask_date(txt):
+def request_date(txt):
     """
-    Запрашиваем у пользователя дату
-
+    Запрашиваем у пользователя дату в формате ДД-ММ-ГГГГ
     Args:
         txt (str): Текст выдаваемый запросом
-             Правильность ввденой даты проверяется фунцией
+             Правильность введеной даты проверяется фунцией
              get_date(str_date)
     Returns:
         date (datetime): Преобразованая дата
@@ -57,42 +57,35 @@ def ask_date(txt):
     date = None
     while not true_date:
         print(txt)
-        str_date = input('В формате ДД-ММ-ГГГГ: ')
-        true_date, date = get_date(str_date)
+        str_date = input('В формате ДД-ММ-ГГГГ или q для выхода:')
+        if str_date == 'q':
+            sys.exit()
+        true_date, date = check_validation_date(str_date)
 
     return date
 
 
-# Function for create xlsx file
-def get_template_name():
-    return None
-
-
-def copy_template_file(template_file, new_file):
+def check_difference(first_date, second_date):
     """
-    Копируем шаблон <template_file> в новый файл <new_file>
+    Проверяет не равные ли даты
     Args:
-        template_file (str): Имя одно из файлов шаблона, которые находятся в папке Templates
-        new_file (str): Имя нового файла сформированого из шаблона
-
+        first_date, second_date: Даты введенные пользователями
     Returns:
-        None - Копирует template_file с новым названием new_file
+        True - если они равны, если это не так False
     """
-    try:
-        shutil.copy(template_file, new_file)
-        return True
-    except shutil.SameFileError:
-        # Исключение на будущее, когда можно будет задавать имя нового файла через аргументы
-        print('Имя Шаблона и нового файла совпадают')
-    except PermissionError:
-        # Исключение при недоступноти
-        print("У вас нет прав.")
+    print('Две даты отчетного периода должны быь разными.')
+    return first_date == second_date
 
-        # For other errors
-    except:
-        print("Error occurred while copying file.")
-    finally:
-        return False
+
+def order_dates(first_date, second_date):
+    """
+    Сортируем даты, и возращаем их
+    Args:
+        first_date, second_date:  Даты введенные пользователями
+    Returns:
+        Возращает отсортированые даты
+    """
+    return sorted([first_date, second_date])
 
 
 def new_file_name(template, to_date):
@@ -103,10 +96,35 @@ def new_file_name(template, to_date):
     :param template: Source file - file with template
     :param to_date: date of end  of period
     :return:
-        name for new name = {region_name}_{month}.xlsx
+        {region_name}_{month:02}_{year:04}.xlsx
     """
     region_name = template.split('_')[-1]
     return f'./{region_name}_{to_date.month:02}_{to_date.year:04}.xlsx'
+
+
+def copy_template_file(template_file, new_file):
+    """
+    Копируем шаблон <template_file> в новый файл <new_file>
+    Args:
+        template_file (str): Имя одно из файлов шаблона, которые находятся в папке Templates
+        new_file (str): Имя нового файла сформированого из шаблон
+    Returns:
+        True - Если копия создана, False если произошла ошибка
+    """
+    try:
+        shutil.copy(template_file, new_file)
+        return True
+
+    except shutil.SameFileError:
+        # Исключение на будущее, когда можно будет задавать имя нового файла через аргументы
+        print('Имя Шаблона и нового файла совпадают')
+    except PermissionError:
+        # Исключение при недоступноти
+        print("У вас нет прав.")
+    except Exception:
+        # For other errors
+        print("Error occurred while copying file.")
+    return False
 
 
 def open_xlsx(file_name):
@@ -115,12 +133,12 @@ def open_xlsx(file_name):
     return wb, ws
 
 
-def get_pids(template_file, pid_colunm=PIDS_COL):
+def get_pids(template_file, pid_column=1):
     """
-    Get points id from excel column
-    :param template_file: Source file - file with template
-    :param pid_colunm: column number. Default value = PIDS_COL
-    :return pids: diction {row: point id}
+    Получаем points_id с ексел файла. Проверяя колонку под номером <pid_column>
+    :param template_file: файл шаблона
+    :param pid_column: Колонка с points_id. Default value = 1
+    :return pids: diction {point id: номер колонки}
     """
     wb, ws = open_xlsx(template_file)
 
@@ -130,20 +148,15 @@ def get_pids(template_file, pid_colunm=PIDS_COL):
 
     pids = dict()
     for num_row in range(1, mr + 1):
-        pid = ws.cell(row=num_row, column=pid_colunm).value
+        pid = ws.cell(row=num_row, column=pid_column).value
         if pid:
             pids[pid] = num_row
-
     wb.close()
 
     return pids
 
 
-def get_data(pid):
-    return data.get(pid)
-
-
-def fill_xlsx(new_file, pid_row, date_since, date_to, column=PIDS_COL):
+def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
     """
     Put date into xlsx file
     :param new_file:
@@ -173,9 +186,7 @@ def create_file_with_data(template_name, since_date, to_date):
 
     :return: True if
     """
-    new_file = new_file_name(template_name, to_date)
-    template_file = f'./template/{template_name}.xlsx'
 
-    copy_template_file(template_file, new_file)
+
     pid_rows = get_pids(template_file)
     fill_xlsx(new_file, pid_rows, since_date, to_date)
