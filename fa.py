@@ -133,29 +133,6 @@ def open_xlsx(file_name):
     return wb, ws
 
 
-def get_pids(template_file, pid_column=1):
-    """
-    Получаем points_id с ексел файла. Проверяя колонку под номером <pid_column>
-    :param template_file: файл шаблона
-    :param pid_column: Колонка с points_id. Default value = 1
-    :return pids: diction {point id: номер колонки}
-    """
-    wb, ws = open_xlsx(template_file)
-
-    # calculate total number of rows and
-    # columns in source excel file
-    mr, mc = ws.max_row, ws.max_column
-
-    pids = dict()
-    for num_row in range(1, mr + 1):
-        pid = ws.cell(row=num_row, column=pid_column).value
-        if pid:
-            pids[pid] = num_row
-    wb.close()
-
-    return pids
-
-
 def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
     """
     Put date into xlsx file
@@ -187,6 +164,28 @@ def create_file_with_data(template_name, since_date, to_date):
     :return: True if
     """
 
-
     pid_rows = get_pids(template_file)
     fill_xlsx(new_file, pid_rows, since_date, to_date)
+
+
+def get_pids(template_file, pid_column=1):
+    """
+    Получаем points_id с ексел файла. Проверяя колонку под номером <pid_column>
+    :param template_file: файл шаблона
+    :param pid_column: Колонка с points_id. Default value = 1
+    :return pids: diction {point id: номер колонки}
+    """
+    wb, ws = open_xlsx(template_file)
+
+    # calculate total number of rows and
+    # columns in source excel file
+    mr, mc = ws.max_row, ws.max_column
+
+    pids = dict()
+    for num_row in range(1, mr + 1):
+        pid = ws.cell(row=num_row, column=pid_column).value
+        if pid:
+            pids[pid] = num_row
+    wb.close()
+
+    return pids
