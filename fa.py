@@ -7,43 +7,22 @@ from datetime import datetime
 
 
 # Функции для получения дат начала и конца периода
-class FutureDate(Exception):
+def check_dates_difference(first_date, second_date):
     """
-    Обработчик исключения. Дата конца и начала периода,
-    должны быть раньше сегодня
-    """
-
-    def __init__(self, text):
-        self.txt = text
-
-
-def check_validation_date(str_date: str):
-    """
-    Переводим str_date в дату, попутно проверяем ее:
-        - Что бы дата была раньше сегодня
-        - Что бы была в правильном формате
-        - Что бы существовала
+    Проверяет не равные ли даты
     Args:
-        str_date (str): дата в виде строки, должна быть в формате "ДД-ММ-ГГГГ"
+        first_date, second_date: Даты введенные пользователями
     Returns:
-        True или False - в зависимости от того, смогли ли мы преобразовать дату
-        date - преобразованую строку в datetime
+        True - если они равны, если это не так False
     """
-    try:
-        date = datetime.strptime(str_date, '%d-%m-%Y')
-        if date > datetime.now():
-            raise FutureDate('Даты должны быть в прошлом')
-        return True, date
-    except ValueError:
-        print('Вы ввели дату или не в формате ДД-ММ-ГГГГ.')
-        print('Или не существующую дату')
-    except FutureDate as mr:
-        print(mr)
-    print()
-    return False, None
+    if first_date == second_date:
+        print('Две даты отчетного периода должны быть разными.')
+        return True
+    else:
+        return False
 
 
-def request_date(txt):
+def request_date(txt: str) -> datetime:
     """
     Запрашиваем у пользователя дату в формате ДД-ММ-ГГГГ
     Args:
@@ -65,16 +44,45 @@ def request_date(txt):
     return date
 
 
-def check_difference(first_date, second_date):
+class FutureDate(Exception):
     """
-    Проверяет не равные ли даты
+    Обработчик исключения. Дата конца и начала периода,
+    должны быть раньше сегодня
+    """
+
+    def __init__(self, text):
+        self.txt = text
+
+
+def check_validation_date(str_date: str) -> tuple:
+    """
+    Переводим str_date в дату, попутно проверяем ее:
+        - Что бы дата была раньше сегодня
+        - Что бы была в правильном формате
+        - Что бы существовала
     Args:
-        first_date, second_date: Даты введенные пользователями
+        str_date (str): дата в виде строки, должна быть в формате "ДД-ММ-ГГГГ"
     Returns:
-        True - если они равны, если это не так False
+        True или False - в зависимости от того, смогли ли мы преобразовать дату
+        date - преобразованую строку в datetime
     """
-    print('Две даты отчетного периода должны быь разными.')
-    return first_date == second_date
+    date_valid = False
+    date = datetime.strptime('01-01-1900', '%d-%m-%Y')
+    try:
+        date = datetime.strptime(str_date, '%d-%m-%Y')
+        if date > datetime.now():
+            raise FutureDate('Даты должны быть в прошлом')
+        date_valid = True
+
+    except ValueError:
+        print('Вы ввели дату или не в формате ДД-ММ-ГГГГ.')
+        print('Или не существующую дату')
+    except FutureDate as mr:
+        print(mr)
+
+    finally:
+        print()
+        return date_valid, date
 
 
 def order_dates(first_date, second_date):
@@ -88,6 +96,7 @@ def order_dates(first_date, second_date):
     return sorted([first_date, second_date])
 
 
+# File from template
 def new_file_name(template, to_date):
     """
     Create name for new file = region name + month
@@ -120,52 +129,11 @@ def copy_template_file(template_file, new_file):
         print('Имя Шаблона и нового файла совпадают')
     except PermissionError:
         # Исключение при недоступноти
-        print("У вас нет прав.")
+        print("Проблемы с доступом. Обратитесть к Администратору")
     except Exception:
         # For other errors
         print("Error occurred while copying file.")
     return False
-
-
-def open_xlsx(file_name):
-    wb = xl.load_workbook(file_name)
-    ws = wb.worksheets[0]
-    return wb, ws
-
-
-def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
-    """
-    Put date into xlsx file
-    :param new_file:
-    :param pid_row:
-    :param column:
-    :return:
-    """
-    # wb, ws = open_xlsx(new_file)
-
-    conn = oracle.ora_connect()
-    ora_prev_data = oracle.ora_get_raw_data(conn, date_since, pid_row)
-    ora_current_data = oracle.ora_get_raw_data(conn, date_to, pid_row)
-
-    # for x in range(1, ws.max_row + 1):
-    #    ws.cell(row=x, column=column).value = None
-
-    # wb.save(new_file)
-    # wb.close()
-
-
-def create_file_with_data(template_name, since_date, to_date):
-    """
-    Create xlsx file. And then fill in the file
-    :param template_name: Name of template
-    :param since_date: Start date of period
-    :param to_date: End date of period
-
-    :return: True if
-    """
-
-    pid_rows = get_pids(template_file)
-    fill_xlsx(new_file, pid_rows, since_date, to_date)
 
 
 def get_pids(template_file, pid_column=1):
@@ -189,3 +157,53 @@ def get_pids(template_file, pid_column=1):
     wb.close()
 
     return pids
+
+
+def open_xlsx(file_name):
+    wb = xl.load_workbook(file_name)
+    ws = wb.worksheets[0]
+    return wb, ws
+
+
+# Put data from DB into xlsx file
+def create_file_with_data(template_name, since_date, to_date):
+    """
+    Create xlsx file. And then fill in the file
+    :param template_name: Name of template
+    :param since_date: Start date of period
+    :param to_date: End date of period
+
+    :return: True if
+    """
+
+    pid_rows = get_pids(template_name)
+    fill_xlsx(new_file, pid_rows, since_date, to_date)
+
+
+
+
+
+def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
+    """
+    Put date into xlsx file
+    :param new_file:
+    :param pid_row:
+    :param column:
+    :return:
+    """
+    # wb, ws = open_xlsx(new_file)
+
+    conn = oracle.ora_connect()
+    ora_prev_data = oracle.ora_get_raw_data(conn, date_since, pid_row)
+    ora_current_data = oracle.ora_get_raw_data(conn, date_to, pid_row)
+
+    # for x in range(1, ws.max_row + 1):
+    #    ws.cell(row=x, column=column).value = None
+
+    # wb.save(new_file)
+    # wb.close()
+
+
+
+
+
