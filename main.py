@@ -6,19 +6,18 @@ import oracle as ora
 def main():
     # Задача на будущее: прикрутить argparser
     first_date, second_date = None, None
-    template_name = 'template_BOE'
+    template_name = 'template_показники'
 
     # Даты начала и конца периода отчета вводим с клавиатуры
     while fa.check_dates_difference(first_date, second_date):
         first_date = fa.request_date('Введите дату предыущего отчетного периода')
         second_date = fa.request_date('Введите дату этого отчетного периода')
 
-    print(first_date, second_date)
     # Сортируем, что бы случайно не перепутали даты
     date_since, date_to = fa.order_dates(first_date, second_date)
 
     # Копируем фаил темплейта в файл <region_name>_<month:02>_<year:04>.xlsx'
-    new_file_name = fa.new_file_name(template_name, date_to)
+    new_file_name = fa.new_file_name(template_name, date_since, date_to)
     template_name = f'./template/{template_name}.xlsx'
 
     if not fa.copy_template_file(template_name, new_file_name):
@@ -34,9 +33,11 @@ def main():
     raw_db_data_date_since = ora.ora_get_raw_data(cursor, date_since, dict_pids)
     raw_db_data_date_to = ora.ora_get_raw_data(cursor, date_to, dict_pids)
 
-    test_msg(raw_db_data_date_since, raw_db_data_date_to)
+    # test_msg(raw_db_data_date_since, raw_db_data_date_to)
 
-    #fa.create_file_with_data(template_name, date_since, date_to)
+    date_since, date_to = fa.compare_cell_2_data(dict_pids, raw_db_data_date_since, raw_db_data_date_to)
+
+    fa.create_file_with_data(new_file_name, date_since, date_to)
 
 
 def test_msg(raw_db_data_date_since, raw_db_data_date_to):

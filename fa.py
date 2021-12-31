@@ -6,6 +6,12 @@ import oracle
 from datetime import datetime
 
 
+SETTINGS = {
+            "start":    {"A+": 4, "A-": 10, "Q1": 16, "Q2": 22, "Q3": 28, "Q4": 34},
+            "end":    {"A+": 5, "A-": 11, "Q1": 17, "Q2": 23, "Q3": 29, "Q4": 35},
+            }
+
+
 # Функции для получения дат начала и конца периода
 def check_dates_difference(first_date, second_date):
     """
@@ -97,7 +103,7 @@ def order_dates(first_date, second_date):
 
 
 # File from template
-def new_file_name(template, to_date):
+def new_file_name(template, since_date, to_date):
     """
     Create name for new file = region name + month
         region name - we get from template name
@@ -107,8 +113,10 @@ def new_file_name(template, to_date):
     :return:
         {region_name}_{month:02}_{year:04}.xlsx
     """
-    region_name = template.split('_')[-1]
-    return f'./{region_name}_{to_date.month:02}_{to_date.year:04}.xlsx'
+    template_name = template.split('_')[-1]
+    first_date = f'{since_date.day:02}.{since_date.month:02}.{since_date.year:04}'
+    second_date = f'{to_date.day:02}.{to_date.month:02}.{to_date.year:04}'
+    return f'./{template_name}_{first_date}-{second_date}.xlsx'
 
 
 def copy_template_file(template_file, new_file):
@@ -166,44 +174,44 @@ def open_xlsx(file_name):
 
 
 # Put data from DB into xlsx file
-def create_file_with_data(template_name, since_date, to_date):
-    """
-    Create xlsx file. And then fill in the file
-    :param template_name: Name of template
-    :param since_date: Start date of period
-    :param to_date: End date of period
-
-    :return: True if
-    """
-
-    pid_rows = get_pids(template_name)
-    fill_xlsx(new_file, pid_rows, since_date, to_date)
-
-
-
-
-
-def fill_xlsx(new_file, pid_row, date_since, date_to, column=1):
-    """
-    Put date into xlsx file
-    :param new_file:
-    :param pid_row:
-    :param column:
-    :return:
-    """
-    # wb, ws = open_xlsx(new_file)
-
-    conn = oracle.ora_connect()
-    ora_prev_data = oracle.ora_get_raw_data(conn, date_since, pid_row)
-    ora_current_data = oracle.ora_get_raw_data(conn, date_to, pid_row)
-
-    # for x in range(1, ws.max_row + 1):
-    #    ws.cell(row=x, column=column).value = None
-
-    # wb.save(new_file)
-    # wb.close()
+def compare_cell_2_data(pid_row, raw_data_since, raw_data_to):
+    dict_row_data_since = dict()
+    dict_row_data_to = dict()
+    for data_line in raw_data_since:
+        row = pid_row.get(data_line[0])
+        if row:
+            dict_row_data_since[row] = {"A+": data_line[2], "A-": data_line[3],
+                                        "Q1": data_line[4], "Q3": data_line[5]}
+    for data_line in raw_data_to:
+        row = pid_row.get(data_line[0])
+        if row:
+            dict_row_data_to[row] = {"A+": data_line[2], "A-": data_line[3],
+                                     "Q1": data_line[4], "Q3": data_line[5]}
+    return dict_row_data_since, dict_row_data_to
 
 
+def create_file_with_data(file_name: str, dict_row_data_since, dict_row_data_to, column = 1):
+
+    wb, ws = open_xlsx(file_name)
+
+    for row in range(1, ws.max_row + 1):
+        ws.cell(row=row, column=column).value = None
+
+        if dict_row_data_since.get(row):
+            fill_xls_row(ws, row, SETTINGS["start"], dict_row_data_since[row])
+
+        if dict_row_data_to.get(row):
+            fill_xls_row(ws, row, SETTINGS["end"], dict_row_data_to[row])
+
+
+    wb.save(file_name)
+    wb.close()
+
+
+def fill_xls_row(worksheet, row, value_position, dict_row_data):
+
+    for param, param_value in dict_row_data.items():
+        worksheet.cell(row=row, column=value_position[param]).value = param_value
 
 
 

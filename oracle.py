@@ -2,7 +2,9 @@ import cx_Oracle as ora
 import keyring
 
 SQL_REQUEST = """
-SELECT      p.mid, b.date_time, b.erm "a+", b.edm "a-"
+SELECT      p.mid, b.date_time, 
+            b.erm "a+", b.edm "a-", 
+            b.q1m "Q1", b.q3m "Q3"
 FROM        billorg b, points p
 WHERE       p.mid = b.mid
             AND (b.date_time> TO_DATE('{0}', 'DD.MM.YYYY')-1) and (b.date_time<= TO_DATE('{0}', 'DD.MM.YYYY'))
